@@ -76,6 +76,7 @@ classdef MaSDM_GA < Algorithm
                 matrix_Q(i, i) = 0;
             end
 
+
             while Algo.notTerminated(Prob, population)
 
                 % --------- Update matrix_R every 100 generations ---------
@@ -175,6 +176,13 @@ classdef MaSDM_GA < Algorithm
                 indorder = randperm(popSize);
                 transferFlag{t} = zeros(1, popSize);
 
+                [~, sorted_idx] = sort([population{t}.Objs]);
+                elite_num = max(1, round(0.2 * length(population{t})));
+                elite_idx = sorted_idx(1:elite_num);
+                eliteDecs = vertcat(population{t}(elite_idx).Dec);
+                mean_t = mean(eliteDecs, 1);
+                avg_dist_t = mean(sqrt(sum((eliteDecs - mean_t).^2, 2)));
+
 
                 count = 1;
                 for i = 1:ceil(popSize / 2)
@@ -221,12 +229,7 @@ classdef MaSDM_GA < Algorithm
                             transferFlag{t}(count)     = 1;
                             transferFlag{t}(count + 1) = 1;
 
-                            [~, sorted_idx] = sort([population{t}.Objs]);
-                            elite_num = max(1, round(0.2 * length(population{t})));
-                            elite_idx = sorted_idx(1:elite_num);
-                            eliteDecs = vertcat(population{t}(elite_idx).Dec);
-                            mean_t = mean(eliteDecs, 1);
-                            avg_dist_t = mean(sqrt(sum((eliteDecs - mean_t).^2, 2)));
+                            
                             archive_corrected = population{t}(p1).Dec;
 
                             for j = 1:knowledge_task_num

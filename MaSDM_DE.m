@@ -15,7 +15,7 @@ classdef MaSDM_DE < Algorithm
         Delta0 = 0.5
         Gap = 5
         Lambda0 = 0.5
-        ParaMin =0.05
+        ParaMin = 0.05
         ParaMax = 0.95
         eta = 30;
         split  = 50;
@@ -46,7 +46,7 @@ classdef MaSDM_DE < Algorithm
             Algo.ParaMin = str2double(Parameter{i}); i = i + 1;
             Algo.ParaMax = str2double(Parameter{i}); i = i + 1;
             Algo.eta     = str2double(Parameter{i}); i = i + 1;
-            Algo.split   = str2double(Parameter{i}); 
+            Algo.split   = str2double(Parameter{i});
         end
 
         function run(Algo, Prob)
@@ -75,8 +75,9 @@ classdef MaSDM_DE < Algorithm
                 matrix_Q(i, i) = 0;
             end
 
-            while Algo.notTerminated(Prob, population)
 
+            while Algo.notTerminated(Prob, population)
+                
                 % --------- Update matrix_R every eta generations ---------
                 if mod(Algo.Gen, Algo.eta) == 0
                     for t = 1:Prob.T
@@ -172,6 +173,13 @@ classdef MaSDM_DE < Algorithm
                 indorder = randperm(popSize);
                 transferFlag{t} = zeros(1, popSize);
 
+                [~, sorted_idx] = sort([population{t}.Objs]);
+                elite_num = max(1, round(0.2 * length(population{t})));
+                elite_idx = sorted_idx(1:elite_num);
+                eliteDecs = vertcat(population{t}(elite_idx).Dec);
+                mean_t = mean(eliteDecs, 1);
+                avg_dist_t = mean(sqrt(sum((eliteDecs - mean_t).^2, 2)));
+
 
                 count = 1;
                 for i = 1:ceil(popSize / 2)
@@ -222,7 +230,7 @@ classdef MaSDM_DE < Algorithm
                             end
                         end
                         offspring{t}(count+ 1).Dec  = u2;
-                    
+
                     else
                         % ======================================================
                         % Inter-task evolution
@@ -230,7 +238,7 @@ classdef MaSDM_DE < Algorithm
 
                         knowledge_task_num = Algo.KTN;
                         task_scores = -inf(1, length(population));
-                        
+
                         for j = 1:length(population)
                             if j == t
                                 continue;
@@ -250,15 +258,8 @@ classdef MaSDM_DE < Algorithm
                             % ------------------------------------------------
                             transferFlag{t}(count)     = 1;
                             transferFlag{t}(count + 1) = 1;
-
-                            [~, sorted_idx] = sort([population{t}.Objs]);
-                            elite_num = max(1, round(0.2 * length(population{t})));
-                            elite_idx = sorted_idx(1:elite_num);
-                            eliteDecs = vertcat(population{t}(elite_idx).Dec);
-                            mean_t = mean(eliteDecs, 1);
-                            avg_dist_t = mean(sqrt(sum((eliteDecs - mean_t).^2, 2)));
+                        
                             archive_corrected = population{t}(p1).Dec;
-
                             for j = 1:knowledge_task_num
                                 rt = ass_tasks(j);
                                 newpopulation = population{rt};
@@ -361,8 +362,8 @@ classdef MaSDM_DE < Algorithm
             % ---------------------------
             % Case 2: different dimensions
             % --------------------------
-            D = max(di, dj);         
-            d_common = min(di, dj);  
+            D = max(di, dj);
+            d_common = min(di, dj);
 
             Mi_pad = zeros(n1, D);
             Mj_pad = zeros(n2, D);
@@ -374,11 +375,11 @@ classdef MaSDM_DE < Algorithm
             [~, ~, Vi] = svd(Mi_pad, 'econ');
             [~, ~, Vj] = svd(Mj_pad, 'econ');
             d_common = min([d_common, size(Vi, 2), size(Vj, 2)]);
-            Ai = Vi(:, 1:d_common);  
-            Aj = Vj(:, 1:d_common);  
-            Mij = Ai' * Aj;        
-            Mi_proj = Mi_pad * Ai;           
-            Mj_proj = Mj_pad * Aj * Mij';    
+            Ai = Vi(:, 1:d_common);
+            Aj = Vj(:, 1:d_common);
+            Mij = Ai' * Aj;
+            Mi_proj = Mi_pad * Ai;
+            Mj_proj = Mj_pad * Aj * Mij';
             gi = Mi_proj(:);
             gj = Mj_proj(:);
             cosSim = (gi' * gj) / (norm(gi) * norm(gj) + 1e-12);
